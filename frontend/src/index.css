@@ -37,9 +37,9 @@ body {
 }
 
 .app-container {
-  max-width: 1200px;
-  width: 100%;
-  padding: 80px 40px;
+  max-width: 1800px;
+  width: 95%;
+  padding: 80px 20px;
   display: flex;
   flex-direction: column;
   gap: 80px;
@@ -48,7 +48,7 @@ body {
 header {
   text-align: center;
   padding: 40px 0;
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
