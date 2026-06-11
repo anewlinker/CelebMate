@@ -1,0 +1,37 @@
+# Environments
+.env
+.env.*
+.venv
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Node / React
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+.npm
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+
+# Data and Sensitive Files
+*.xlsx
+*.xls
+*.csv
+*.pdf
+*.hwpx
+data/
+upload/
+backup/
+result/
+결과물/

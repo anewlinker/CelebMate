@@ -1,0 +1,6 @@
+pandas
+openpyxl
+mcp
+Pillow
+
+python-dotenv
