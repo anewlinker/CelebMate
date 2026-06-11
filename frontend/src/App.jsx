@@ -55,7 +55,7 @@ function App() {
     }
   }
 
-  const handleGenerate = async (memberName, memberRank) => {
+  const handleGenerate = async (memberName, memberRank, overrideMessage = null) => {
     setGenerating(prev => ({...prev, [memberName]: '생성중...'}))
     
     // Fallback if message is empty
@@ -69,7 +69,7 @@ function App() {
         body: JSON.stringify({
           member_name: memberName,
           member_rank: memberRank,
-          message: messages[memberName] || fallbackMessage,
+          message: overrideMessage || messages[memberName] || fallbackMessage,
           event_type: currentEvent === 'custom' ? '축하' : currentEvent
         })
       })
@@ -133,6 +133,8 @@ function App() {
       const data = await res.json()
       if (data.success) {
         setMessages(prev => ({ ...prev, [memberName]: data.message }))
+        // Automatically generate poster to reflect the new message
+        handleGenerate(memberName, memberRank, data.message)
       } else {
         setMessages(prev => ({ ...prev, [memberName]: "생성 실패. 직접 입력해주세요." }))
       }

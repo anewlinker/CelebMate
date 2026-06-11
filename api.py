@@ -109,14 +109,22 @@ def generate_message(req: MessageRequest):
             title = rank if rank else "직원"
 
         if req.custom_prompt:
-            prompt = f"회사 동료 '{req.member_name} {title}'에게 보낼 축하 메시지를 작성해줘. 참고할 사유는 '{req.custom_prompt}'야. 1~2줄짜리 짧고 센스있는 문구로 화려하게 작성해줘. 너무 길지 않게 해줘."
+            prompt = (
+                f"회사 동료 '{req.member_name} {title}'에게 보낼 축하 메시지를 작성해. 참고할 사유는 '{req.custom_prompt}'야. "
+                "1~2줄짜리 짧고 센스있는 문구로 화려하게 작성해. "
+                "절대 '네', '알겠습니다', '프롬프트' 같은 부가적인 설명이나 인사말을 넣지 말고, 오직 포스터에 들어갈 최종 문장만 출력해."
+            )
         else:
-            prompt = f"회사 동료 '{req.member_name} {title}'의 '{req.event_type}' 축하 포스터에 들어갈 1~2줄짜리 짧고 센스있는 문구를 작성해줘. 영화 포스터나 웹툰 대사처럼 임팩트 있게 해줘. 너무 길지 않게 해줘."
+            prompt = (
+                f"회사 동료 '{req.member_name} {title}'의 '{req.event_type}' 축하 포스터에 들어갈 1~2줄짜리 짧고 센스있는 문구를 작성해. "
+                "영화 포스터 대사처럼 임팩트 있게 해. "
+                "절대 부가적인 설명이나 인사말을 넣지 말고, 포스터에 들어갈 최종 문장만 딱 출력해. 따옴표도 붙이지 마."
+            )
         
         response = client.chat.completions.create(
             model=model_name,
             messages=[
-                {"role": "system", "content": "너는 사내 이벤트를 기획하고 동료들의 기운을 북돋아주는 분위기 메이커야."},
+                {"role": "system", "content": "너는 사내 이벤트를 기획하고 동료들의 기운을 북돋아주는 분위기 메이커야. 무조건 사용자가 요청한 멘트 텍스트만 출력해야 해."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7,
