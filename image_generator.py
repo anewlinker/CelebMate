@@ -68,17 +68,17 @@ class ImageGenerator:
             # Load Fonts
             try:
                 if style_type in [3, 4]:
-                    font_logo = ImageFont.truetype("Jua-Regular.ttf", 55)
-                    font_sub = ImageFont.truetype("Jua-Regular.ttf", 50)
-                    font_main = ImageFont.truetype("Jua-Regular.ttf", 110)
-                    font_msg = ImageFont.truetype("Jua-Regular.ttf", 85)
-                    font_sig = ImageFont.truetype("Jua-Regular.ttf", 50)
+                    font_logo = ImageFont.truetype("Jua-Regular.ttf", 50)
+                    font_sub = ImageFont.truetype("Jua-Regular.ttf", 45)
+                    font_main = ImageFont.truetype("Jua-Regular.ttf", 90)
+                    font_msg = ImageFont.truetype("Jua-Regular.ttf", 60)
+                    font_sig = ImageFont.truetype("Jua-Regular.ttf", 40)
                 else:
-                    font_logo = ImageFont.truetype("malgunbd.ttf", 55)
-                    font_sub = ImageFont.truetype("malgunbd.ttf", 45)
-                    font_main = ImageFont.truetype("malgunbd.ttf", 95)
-                    font_msg = ImageFont.truetype("malgunbd.ttf", 75)
-                    font_sig = ImageFont.truetype("malgunbd.ttf", 45)
+                    font_logo = ImageFont.truetype("malgunbd.ttf", 45)
+                    font_sub = ImageFont.truetype("malgunbd.ttf", 40)
+                    font_main = ImageFont.truetype("malgunbd.ttf", 85)
+                    font_msg = ImageFont.truetype("malgunbd.ttf", 55)
+                    font_sig = ImageFont.truetype("malgunbd.ttf", 40)
             except IOError:
                 font_main = font_msg = font_sub = font_logo = font_sig = ImageFont.load_default()
 
@@ -87,73 +87,66 @@ class ImageGenerator:
                 w = bbox[2] - bbox[0]
                 x = (bg_width - w) // 2
                 
-                shadow_img = Image.new('RGBA', (bg_width, bg_height), (0,0,0,0))
-                s_draw = ImageDraw.Draw(shadow_img)
-                for dx in [-2, 0, 2]:
-                    for dy in [-2, 0, 2]:
-                        s_draw.text((x + dx, y + dy), text, font=font, fill=(shadow_color[0], shadow_color[1], shadow_color[2], shadow_opacity))
-                shadow_img = shadow_img.filter(ImageFilter.GaussianBlur(shadow_radius))
-                base_image.paste(shadow_img, (0, 0), shadow_img)
-                
-                draw.text((x, y), text, font=font, fill=fill_color)
+                # Simple native drop shadow instead of heavy gaussian blur loop
+                draw.text((x+4, y+4), text, font=font, fill=shadow_color)
+                # Draw text with a thin stroke to ensure it's always readable over the photo
+                draw.text((x, y), text, font=font, fill=fill_color, stroke_width=2, stroke_fill=shadow_color)
 
             def draw_outlined_text(y, text, font, fill_color, outline_color, outline_width=6):
                 bbox = draw.textbbox((0, 0), text, font=font)
                 w = bbox[2] - bbox[0]
                 x = (bg_width - w) // 2
                 
-                for dx in range(-outline_width, outline_width + 1):
-                    for dy in range(-outline_width, outline_width + 1):
-                        if dx*dx + dy*dy <= outline_width*outline_width:
-                            draw.text((x + dx, y + dy), text, font=font, fill=outline_color)
-                
-                draw.text((x, y), text, font=font, fill=fill_color)
+                # Use Pillow's native stroke functionality for crisp, clean outlines
+                draw.text((x, y), text, font=font, fill=fill_color, stroke_width=outline_width, stroke_fill=outline_color)
 
             import textwrap
-            lines = textwrap.wrap(message, width=18)
-            msg_y = bg_height - 350 - (len(lines) * 45)
+            lines = textwrap.wrap(message, width=22)
+            # Adjust spacing dynamically based on lines
+            line_spacing = 80
+            msg_y = bg_height - 350 - (len(lines) * line_spacing)
 
             event_text = f"{member_rank} 승진" if event_type == "승진" else event_type
 
             if style_type == 1:
                 # Style 1: Official Navy
                 draw_shadowed_text(100, "행정안전부", font_logo, (255, 255, 255))
-                draw_shadowed_text(170, f"행정안전부 {member_name} {member_rank}님", font_sub, (230, 230, 230))
-                draw_shadowed_text(240, f"{event_text}을 축하합니다!", font_main, (255, 215, 0))
+                draw_shadowed_text(160, f"행정안전부 {member_name} {member_rank}님", font_sub, (230, 230, 230))
+                draw_shadowed_text(220, f"{event_text}을 축하합니다!", font_main, (255, 215, 0))
                 for line in lines:
-                    draw_shadowed_text(msg_y, line, font_msg, (255, 255, 255), shadow_radius=15, shadow_opacity=255)
-                    msg_y += 100
-                draw_shadowed_text(bg_height - 150, "행정안전부 일동", font_sig, (255, 215, 0))
+                    draw_shadowed_text(msg_y, line, font_msg, (255, 255, 255), shadow_color=(0, 0, 0))
+                    msg_y += line_spacing
+                draw_shadowed_text(bg_height - 120, "행정안전부 일동", font_sig, (255, 215, 0))
 
             elif style_type == 2:
                 # Style 2: Cinematic Movie
-                draw_shadowed_text(100, "행정안전부", font_logo, (200, 200, 255), shadow_color=(0, 150, 255), shadow_radius=20, shadow_opacity=255)
-                draw_shadowed_text(170, f"행정안전부 {member_name} {member_rank}님", font_sub, (255, 255, 255))
-                draw_shadowed_text(240, f"{event_text}을 축하합니다!", font_main, (255, 255, 255), shadow_color=(0, 100, 255), shadow_radius=25, shadow_opacity=255)
+                draw_shadowed_text(100, "행정안전부", font_logo, (200, 200, 255), shadow_color=(0, 50, 150))
+                draw_shadowed_text(160, f"행정안전부 {member_name} {member_rank}님", font_sub, (255, 255, 255), shadow_color=(0, 50, 150))
+                draw_shadowed_text(220, f"{event_text}을 축하합니다!", font_main, (255, 255, 255), shadow_color=(0, 50, 150))
                 for line in lines:
-                    draw_shadowed_text(msg_y, line, font_msg, (255, 255, 255), shadow_radius=20, shadow_opacity=255)
-                    msg_y += 100
-                draw_shadowed_text(bg_height - 150, "행정안전부 일동", font_sig, (200, 200, 255))
+                    draw_shadowed_text(msg_y, line, font_msg, (255, 255, 255), shadow_color=(0, 50, 150))
+                    msg_y += line_spacing
+                draw_shadowed_text(bg_height - 120, "행정안전부 일동", font_sig, (200, 200, 255))
 
             elif style_type == 3:
                 # Style 3: Pop Art Mix
                 draw_outlined_text(100, "행정안전부", font_logo, (255, 255, 0), (0, 0, 0), outline_width=4)
-                draw_outlined_text(170, f"행정안전부 {member_name} {member_rank}님", font_sub, (255, 255, 255), (0, 0, 0), outline_width=4)
-                draw_outlined_text(240, f"{event_text}을 축하합니다!", font_main, (255, 20, 147), (255, 255, 255), outline_width=8)
+                draw_outlined_text(160, f"행정안전부 {member_name} {member_rank}님", font_sub, (255, 255, 255), (0, 0, 0), outline_width=4)
+                draw_outlined_text(220, f"{event_text}을 축하합니다!", font_main, (255, 20, 147), (255, 255, 255), outline_width=6)
                 for line in lines:
-                    draw_outlined_text(msg_y, line, font_msg, (0, 255, 255), (0, 0, 0), outline_width=6)
-                    msg_y += 100
-                draw_outlined_text(bg_height - 150, "행정안전부 일동", font_sig, (255, 255, 0), (0, 0, 0), outline_width=4)
+                    draw_outlined_text(msg_y, line, font_msg, (0, 255, 255), (0, 0, 0), outline_width=4)
+                    msg_y += line_spacing
+                draw_outlined_text(bg_height - 120, "행정안전부 일동", font_sig, (255, 255, 0), (0, 0, 0), outline_width=4)
 
             elif style_type == 4:
                 # Style 4: MZ Sticker
-                draw_outlined_text(100, "행정안전부", font_logo, (147, 112, 219), (255, 255, 255), outline_width=6)
-                draw_outlined_text(170, f"행정안전부 {member_name} {member_rank}님", font_sub, (0, 0, 0), (255, 255, 255), outline_width=6)
-                draw_outlined_text(240, f"{event_text}을 축하합니다!", font_main, (255, 105, 180), (255, 255, 255), outline_width=10)
+                draw_outlined_text(100, "행정안전부", font_logo, (147, 112, 219), (255, 255, 255), outline_width=5)
+                draw_outlined_text(160, f"행정안전부 {member_name} {member_rank}님", font_sub, (0, 0, 0), (255, 255, 255), outline_width=5)
+                draw_outlined_text(220, f"{event_text}을 축하합니다!", font_main, (255, 105, 180), (255, 255, 255), outline_width=8)
                 for line in lines:
-                    draw_outlined_text(msg_y, line, font_msg, (0, 0, 0), (255, 255, 255), outline_width=8)
-                    msg_y += 100
-                draw_outlined_text(bg_height - 150, "행정안전부 일동", font_sig, (147, 112, 219), (255, 255, 255), outline_width=6)
+                    draw_outlined_text(msg_y, line, font_msg, (0, 0, 0), (255, 255, 255), outline_width=6)
+                    msg_y += line_spacing
+                draw_outlined_text(bg_height - 120, "행정안전부 일동", font_sig, (147, 112, 219), (255, 255, 255), outline_width=5)
 
             # Save
             output_path = os.path.join(self.output_dir, output_filename)
