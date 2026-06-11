@@ -6,7 +6,7 @@ const API_URL = 'http://localhost:8000'
 function App() {
   const [events, setEvents] = useState({ birthdays: [], promotions: [] })
   const [loading, setLoading] = useState(true)
-  const [generating, setGenerating] = useState(null)
+  const [generating, setGenerating] = useState({}) // object for multiple queue
   const [resultImages, setResultImages] = useState({})
   const [messages, setMessages] = useState({})
   const [eventTypes, setEventTypes] = useState({})
@@ -31,17 +31,22 @@ function App() {
       const data = await res.json()
       setEvents(data)
       setLoading(false)
-      
       const initialMsgs = {}
       const initialTypes = {}
-      data.birthdays.forEach(e => {
-        initialMsgs[e['성명']] = `${e['성명']}님, 생일을 진심으로 축하합니다!\n오늘 하루 세상에서 가장 행복하게 보내세요 🎉`
-        initialTypes[e['성명']] = '생일'
-      })
-      data.promotions.forEach(e => {
-        initialMsgs[e['성명']] = `${e['성명']}님, 승진을 축하드립니다!\n앞으로의 멋진 활약을 기대하고 응원합니다 ✨`
-        initialTypes[e['성명']] = '승진'
-      })
+      if (data.all_members) {
+        data.all_members.forEach(e => {
+            if (e.defaultType === '생일') {
+                initialMsgs[e['성명']] = `${e['성명']}님, 생일을 진심으로 축하합니다!\n오늘 하루 세상에서 가장 행복하게 보내세요 🎉`
+                initialTypes[e['성명']] = '생일'
+            } else if (e.defaultType === '승진') {
+                initialMsgs[e['성명']] = `${e['성명']}님, 승진을 축하드립니다!\n앞으로의 멋진 활약을 기대하고 응원합니다 ✨`
+                initialTypes[e['성명']] = '승진'
+            } else {
+                initialMsgs[e['성명']] = `${e['성명']}님, 기념일을 축하합니다!`
+                initialTypes[e['성명']] = e.defaultType || '생일'
+            }
+        })
+      }
       setMessages(initialMsgs)
       setEventTypes(initialTypes)
     } catch (err) {
@@ -51,7 +56,12 @@ function App() {
   }
 
   const handleGenerate = async (memberName, memberRank) => {
-    setGenerating(memberName)
+    setGenerating(prev => ({...prev, [memberName]: '생성중...'}))
+    
+    // Fallback if message is empty
+    const currentEvent = eventTypes[memberName] || '생일'
+    const fallbackMessage = `${memberName}님, ${currentEvent}을 진심으로 축하합니다!`
+    
     try {
       const res = await fetch(`${API_URL}/api/generate`, {
         method: 'POST',
@@ -59,8 +69,8 @@ function App() {
         body: JSON.stringify({
           member_name: memberName,
           member_rank: memberRank,
-          message: messages[memberName],
-          event_type: eventTypes[memberName] === 'custom' ? '축하' : eventTypes[memberName]
+          message: messages[memberName] || fallbackMessage,
+          event_type: currentEvent === 'custom' ? '축하' : currentEvent
         })
       })
       const data = await res.json()
@@ -70,17 +80,27 @@ function App() {
           [memberName]: data.filenames.map(fn => `${API_URL}/images/${fn}?t=${new Date().getTime()}`)
         }))
       } else {
-        alert("포스터 생성 실패 (백엔드 에러)")
+        alert(`[${memberName}] 포스터 생성 실패 (백엔드 에러)`)
       }
     } catch (err) {
       console.error("Failed to generate", err)
-      alert("포스터 생성에 실패했습니다.")
+      alert(`[${memberName}] 포스터 생성에 실패했습니다.`)
     }
-    setGenerating(null)
+    setGenerating(prev => {
+      const next = {...prev}
+      delete next[memberName]
+      return next
+    })
   }
 
   const handleGenerateAll = async () => {
     if (allEvents.length === 0) return
+    
+    // Set all to queued
+    const queued = {}
+    allEvents.forEach(e => { queued[e['성명']] = '대기중...' })
+    setGenerating(queued)
+    
     for (const ev of allEvents) {
       await handleGenerate(ev['성명'], ev['직급'])
     }
@@ -171,10 +191,7 @@ function App() {
     localStorage.setItem('openai_api_key', key)
   }
 
-  const allEvents = [
-    ...events.birthdays.map(e => ({ ...e, defaultType: '생일' })),
-    ...events.promotions.map(e => ({ ...e, defaultType: '승진' }))
-  ].sort((a, b) => a['D-Day'] - b['D-Day'])
+  const allEvents = events.all_members || []
 
   return (
     <div className="app-container">
@@ -265,6 +282,15 @@ function App() {
                           <option value="환영">👋 환영</option>
                           <option value="custom">✏️ 직접 입력</option>
                         </select>
+                        {(eventTypes[ev['성명']] === 'custom') && (
+                          <input
+                            type="text"
+                            value={customEventTypes[ev['성명']] || ''}
+                            onChange={(e) => setCustomEventTypes(prev => ({ ...prev, [ev['성명']]: e.target.value }))}
+                            placeholder="이벤트명 (예: 결혼)"
+                            style={{width: '100px', padding: '8px', borderRadius: '6px', border: '1px solid #ddd'}}
+                          />
+                        )}
                       </div>
 
                       <div style={{display: 'flex', flexDirection: 'row', flex: 1, gap: '10px', alignItems: 'center'}}>
@@ -281,10 +307,10 @@ function App() {
                       <div>
                           <button 
                             onClick={() => handleGenerate(ev['성명'], ev['직급'])}
-                            disabled={generating === ev['성명']}
+                            disabled={!!generating[ev['성명']]}
                             style={{padding: '10px 20px', whiteSpace: 'nowrap', fontWeight: 'bold'}}
                           >
-                            {generating === ev['성명'] ? '생성중...' : '🎨 4종 포스터 생성'}
+                            {generating[ev['성명']] ? generating[ev['성명']] : '🎨 4종 포스터 생성'}
                           </button>
                       </div>
                     </div>

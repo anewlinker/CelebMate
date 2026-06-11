@@ -50,9 +50,8 @@ class MessageRequest(BaseModel):
 
 @app.get("/api/events")
 def get_events():
-    birthdays = data_manager.get_upcoming_events(event_type="생일", days=30)
-    promotions = data_manager.get_upcoming_events(event_type="승진", days=30)
-    return {"birthdays": birthdays, "promotions": promotions}
+    all_members = data_manager.get_all_members()
+    return {"all_members": all_members}
 
 @app.post("/api/upload/roster")
 async def upload_roster(file: UploadFile = File(...)):

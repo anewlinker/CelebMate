@@ -14,47 +14,42 @@ class DataManager:
         except Exception as e:
             print(f"Failed to load excel: {e}")
 
-    def get_upcoming_events(self, event_type="생일", days=30):
+    def get_all_members(self):
         if self.df is None:
             return []
 
         today = datetime.now()
-        upcoming = []
-
-        target_col = "생년월일" if event_type == "생일" else "현직급 임용일"
-        if target_col not in self.df.columns:
-            return []
+        members = []
 
         for index, row in self.df.iterrows():
-            date_str = str(row[target_col])
-            try:
-                # Format is YYYY.MM.DD
-                parts = date_str.strip().split('.')
-                if len(parts) == 3:
-                    month = int(parts[1])
-                    day = int(parts[2])
-                    
-                    # Create date object for this year
-                    event_date = datetime(today.year, month, day)
-                    
-                    # If it already passed this year, check next year
-                    if event_date < today:
-                        event_date = datetime(today.year + 1, month, day)
-                        
-                    delta = (event_date - today).days
-                    if 0 <= delta <= days:
-                        upcoming.append({
-                            "성명": row["성명"],
-                            "직급": row["직급"],
-                            "부서": "알 수 없음", # Data doesn't have department
-                            "이벤트": event_type,
-                            "날짜": f"{month}월 {day}일",
-                            "D-Day": delta
-                        })
-            except Exception as e:
-                pass
-        
-        return sorted(upcoming, key=lambda x: x["D-Day"])
+            closest_event = "생일"
+            min_days = 999
+            
+            for event_type, target_col in [("생일", "생년월일"), ("승진", "현직급 임용일")]:
+                if target_col in self.df.columns:
+                    date_str = str(row[target_col])
+                    try:
+                        parts = date_str.strip().split('.')
+                        if len(parts) == 3:
+                            month, day = int(parts[1]), int(parts[2])
+                            event_date = datetime(today.year, month, day)
+                            if event_date < today:
+                                event_date = datetime(today.year + 1, month, day)
+                            delta = (event_date - today).days
+                            if delta < min_days:
+                                min_days = delta
+                                closest_event = event_type
+                    except Exception:
+                        pass
+            
+            members.append({
+                "성명": row["성명"],
+                "직급": row.get("직급", ""),
+                "defaultType": closest_event,
+                "D-Day": min_days if min_days != 999 else "-"
+            })
+            
+        return sorted(members, key=lambda x: x["D-Day"] if isinstance(x["D-Day"], int) else 9999)
 
     def get_member_info(self, name):
         if self.df is None:
