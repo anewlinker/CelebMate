@@ -257,14 +257,14 @@ function App() {
                 allEvents.map((ev, idx) => (
                   <div className="event-item" key={idx} style={{display: 'flex', flexDirection: 'column', gap: '15px', padding: '20px', background: 'white', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)'}}>
                     
-                    {/* Single Line Input Area */}
-                    <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', width: '100%'}}>
-                      <div className="event-info" style={{minWidth: '150px'}}>
+                    {/* Input Controls Area */}
+                    <div style={{display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '15px', width: '100%'}}>
+                      <div className="event-info" style={{minWidth: '150px', flexShrink: 0}}>
                         <h3 style={{margin: '0 0 5px 0'}}>{ev['성명']} <span className="text-muted" style={{fontSize: '0.9rem'}}>{ev['직급']}</span></h3>
                         <div className="event-meta" style={{fontSize: '0.85rem'}}>D-{ev['D-Day']}</div>
                       </div>
                       
-                      <div style={{display: 'flex', gap: '8px', minWidth: '130px'}}>
+                      <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center'}}>
                         <select 
                           value={eventTypes[ev['성명']] || ev.defaultType}
                           onChange={(e) => {
@@ -293,18 +293,18 @@ function App() {
                         )}
                       </div>
 
-                      <div style={{display: 'flex', flexDirection: 'row', flex: 1, gap: '10px', alignItems: 'center'}}>
-                          <button className="ai-btn" onClick={() => handleGenerateAIMessage(ev['성명'], ev['직급'])} style={{padding: '8px 12px', whiteSpace: 'nowrap'}}>🪄 AI 멘트</button>
+                      <div style={{display: 'flex', flexDirection: 'row', flex: '1 1 350px', gap: '10px', alignItems: 'center'}}>
+                          <button className="ai-btn" onClick={() => handleGenerateAIMessage(ev['성명'], ev['직급'])} style={{padding: '8px 12px', whiteSpace: 'nowrap', flexShrink: 0}}>🪄 AI 멘트</button>
                           <input 
                             type="text"
                             value={messages[ev['성명']] || ''} 
                             onChange={(e) => setMessages(prev => ({ ...prev, [ev['성명']]: e.target.value }))}
                             placeholder="축하 멘트를 입력하세요 (1줄 권장)"
-                            style={{flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #ddd'}}
+                            style={{flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #ddd', minWidth: '200px'}}
                           />
                       </div>
                       
-                      <div>
+                      <div style={{flexShrink: 0}}>
                           <button 
                             onClick={() => handleGenerate(ev['성명'], ev['직급'])}
                             disabled={!!generating[ev['성명']]}
