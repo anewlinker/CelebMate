@@ -90,7 +90,7 @@ class ImageGenerator:
                 # Simple native drop shadow instead of heavy gaussian blur loop
                 draw.text((x+4, y+4), text, font=font, fill=shadow_color)
                 # Draw text with a thin stroke to ensure it's always readable over the photo
-                draw.text((x, y), text, font=font, fill=fill_color, stroke_width=2, stroke_fill=shadow_color)
+                draw.text((x, y), text, font=font, fill=fill_color, stroke_width=3, stroke_fill=shadow_color)
 
             def draw_outlined_text(y, text, font, fill_color, outline_color, outline_width=6):
                 bbox = draw.textbbox((0, 0), text, font=font)
@@ -98,6 +98,16 @@ class ImageGenerator:
                 x = (bg_width - w) // 2
                 
                 # Use Pillow's native stroke functionality for crisp, clean outlines
+                draw.text((x, y), text, font=font, fill=fill_color, stroke_width=outline_width, stroke_fill=outline_color)
+
+            def draw_popart_text(y, text, font, fill_color, outline_color=(0,0,0), outline_width=6, shadow_offset=(8, 8)):
+                bbox = draw.textbbox((0, 0), text, font=font)
+                w = bbox[2] - bbox[0]
+                x = (bg_width - w) // 2
+                
+                # Hard block shadow (solid)
+                draw.text((x + shadow_offset[0], y + shadow_offset[1]), text, font=font, fill=outline_color, stroke_width=outline_width, stroke_fill=outline_color)
+                # Main text with outline
                 draw.text((x, y), text, font=font, fill=fill_color, stroke_width=outline_width, stroke_fill=outline_color)
 
             import textwrap
@@ -130,21 +140,22 @@ class ImageGenerator:
 
             elif style_type == 3:
                 # Style 3: Pop Art Mix
-                draw_outlined_text(100, "행정안전부", font_logo, (255, 255, 0), (0, 0, 0), outline_width=4)
-                draw_outlined_text(160, f"행정안전부 {member_name} {member_rank}님", font_sub, (255, 255, 255), (0, 0, 0), outline_width=4)
-                draw_outlined_text(220, f"{event_text}을 축하합니다!", font_main, (255, 20, 147), (255, 255, 255), outline_width=6)
+                draw_popart_text(100, "행정안전부", font_logo, (255, 255, 0), (0, 0, 0), outline_width=5, shadow_offset=(6, 6))
+                draw_popart_text(160, f"행정안전부 {member_name} {member_rank}님", font_sub, (255, 255, 255), (0, 0, 0), outline_width=5, shadow_offset=(6, 6))
+                draw_popart_text(220, f"{event_text}을 축하합니다!", font_main, (255, 20, 147), (0, 0, 0), outline_width=8, shadow_offset=(8, 8))
                 for line in lines:
-                    draw_outlined_text(msg_y, line, font_msg, (0, 255, 255), (0, 0, 0), outline_width=4)
+                    draw_popart_text(msg_y, line, font_msg, (0, 255, 255), (0, 0, 0), outline_width=6, shadow_offset=(7, 7))
                     msg_y += line_spacing
-                draw_outlined_text(bg_height - 120, "행정안전부 일동", font_sig, (255, 255, 0), (0, 0, 0), outline_width=4)
+                draw_popart_text(bg_height - 120, "행정안전부 일동", font_sig, (255, 255, 0), (0, 0, 0), outline_width=5, shadow_offset=(6, 6))
 
             elif style_type == 4:
-                # Style 4: MZ Sticker
+                # Style 4: MZ Sticker (Also adding a pop-art feel to the message)
                 draw_outlined_text(100, "행정안전부", font_logo, (147, 112, 219), (255, 255, 255), outline_width=5)
                 draw_outlined_text(160, f"행정안전부 {member_name} {member_rank}님", font_sub, (0, 0, 0), (255, 255, 255), outline_width=5)
                 draw_outlined_text(220, f"{event_text}을 축하합니다!", font_main, (255, 105, 180), (255, 255, 255), outline_width=8)
                 for line in lines:
-                    draw_outlined_text(msg_y, line, font_msg, (0, 0, 0), (255, 255, 255), outline_width=6)
+                    # Sticker-style pop message
+                    draw_popart_text(msg_y, line, font_msg, (255, 255, 255), (20, 20, 20), outline_width=7, shadow_offset=(5, 5))
                     msg_y += line_spacing
                 draw_outlined_text(bg_height - 120, "행정안전부 일동", font_sig, (147, 112, 219), (255, 255, 255), outline_width=5)
 
