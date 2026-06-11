@@ -86,7 +86,7 @@ function App() {
     }
   }
 
-  const handleGenerateAIMessage = async (memberName, memberRank) => {
+  const handleGenerateAIMessage = async (memberName, memberRank, overrideEventType = null) => {
     if (!apiKey) {
       alert("설정(⚙️)에서 OpenAI API Key를 먼저 입력해주세요!")
       return
@@ -95,6 +95,9 @@ function App() {
     // Set a temporary loading message
     setMessages(prev => ({ ...prev, [memberName]: "AI가 센스있는 멘트를 고민 중입니다... 💭" }))
     
+    const currentType = overrideEventType || eventTypes[memberName] || '생일'
+    const finalType = currentType === 'custom' ? '특별한 이벤트' : currentType
+    
     try {
       const res = await fetch(`${API_URL}/api/generate_message`, {
         method: 'POST',
@@ -102,8 +105,8 @@ function App() {
         body: JSON.stringify({
           member_name: memberName,
           member_rank: memberRank,
-          event_type: eventTypes[memberName] === 'custom' ? '특별한 이벤트' : eventTypes[memberName],
-          custom_prompt: eventTypes[memberName] === 'custom' ? customEventTypes[memberName] : '',
+          event_type: finalType,
+          custom_prompt: currentType === 'custom' ? customEventTypes[memberName] : '',
           api_key: apiKey
         })
       })
@@ -247,7 +250,13 @@ function App() {
                       <div style={{display: 'flex', gap: '8px', minWidth: '130px'}}>
                         <select 
                           value={eventTypes[ev['성명']] || ev.defaultType}
-                          onChange={(e) => setEventTypes(prev => ({...prev, [ev['성명']]: e.target.value}))}
+                          onChange={(e) => {
+                            const newType = e.target.value;
+                            setEventTypes(prev => ({...prev, [ev['성명']]: newType}));
+                            if (newType !== 'custom' && apiKey) {
+                              handleGenerateAIMessage(ev['성명'], ev['직급'], newType);
+                            }
+                          }}
                           style={{padding: '8px', borderRadius: '6px', border: '1px solid #ddd'}}
                         >
                           <option value="생일">🎂 생일</option>
